@@ -14,26 +14,74 @@
     <div id="container"></div>
     <script type="text/babel">
       const App = () => {
-
         const { useState, useEffect } = React;
-       
-        const [address, setAddress] = useState("");
-        const [state, setState] = useState("");
-        const [city, setCity] = useState("");
+
+        const [address, setAddress] = useState("255 W 550 N");
+        const [state, setState] = useState("UT");
+        const [city, setCity] = useState("Santaquin");
         const [attomID, setAttomID] = useState("");
         const [property, setProperty] = useState("");
         const [salesHistory, setSalesHistory] = useState("");
         const [detailMortgage, setDetailMortgage] = useState("");
         const [detailOwner, setDetailOwner] = useState("");
         const [detailMortgageOwner, setDetailMortgageOwner] = useState("");
-       
+        const [avm, setAvm] = useState("");
+        const [equity, setEquity] = useState("");
+
         const getData = async () => {
-          getSalesHistory()
-          getDetailMortgage()
-          getDetailOwner()
-          getDetailMortgageOwner()
-          
-        }
+          getSalesHistory().then((salesHistory) => {
+            getAvmDetail();
+            getPropertyDetail(salesHistory.property[0].identifier.attomId);
+            getDetailMortgage(salesHistory.property[0].identifier.attomId);
+            getDetailOwner();
+            getDetailMortgageOwner();
+          });
+        };
+
+        const getAvmDetail = async () => {
+          var myHeaders = new Headers();
+          myHeaders.append("APIKey", "36b3a82c4a3ecfd1d73017a898864811");
+          myHeaders.append("accept", "application/json");
+          myHeaders.append("orderby", "distance");
+          myHeaders.append("pagesize", "1");
+
+          var requestOptions = {
+            method: "GET",
+            headers: myHeaders,
+            redirect: "follow",
+          };
+
+          var property = await fetch(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/valuation/homeequity?address1=${address}&address2=${city},${state}`, requestOptions);
+
+          var response = await property.json();
+
+          setAvm(response.property[0].avm);
+          setEquity(response.property[0].homeEquity);
+
+          return response;
+        };
+
+        const getPropertyDetail = async (attomId) => {
+          var myHeaders = new Headers();
+          myHeaders.append("APIKey", "36b3a82c4a3ecfd1d73017a898864811");
+          myHeaders.append("accept", "application/json");
+          myHeaders.append("orderby", "distance");
+          myHeaders.append("pagesize", "1");
+
+          var requestOptions = {
+            method: "GET",
+            headers: myHeaders,
+            redirect: "follow",
+          };
+
+          var property = await fetch(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail?attomid=${attomId}`, requestOptions);
+
+          var response = await property.json();
+
+          setProperty(response.property[0]);
+
+          return response;
+        };
 
         const getSalesHistory = async () => {
           var myHeaders = new Headers();
@@ -48,14 +96,15 @@
             redirect: "follow",
           };
 
-          var property = await fetch(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/saleshistory/expandedhistory?address1=${address}&address2=${city},${state}&radius=1&orderby=distance&page=1&pagesize=1`, requestOptions);
+          var property = await fetch(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/saleshistory/expandedhistory?address1=${address}&address2=${city},${state}`, requestOptions);
 
           var response = await property.json();
 
-          setSalesHistory(response.salesHistory[0]);
+          setSalesHistory(response.property[0].salesHistory);
+          return response;
         };
 
-        const getDetailMortgage = async () => {
+        const getDetailMortgage = async (attomId) => {
           var myHeaders = new Headers();
           myHeaders.append("APIKey", "36b3a82c4a3ecfd1d73017a898864811");
           myHeaders.append("accept", "application/json");
@@ -68,7 +117,7 @@
             redirect: "follow",
           };
 
-          var property = await fetch(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/saleshistory/expandedhistory?address1=${address}&address2=${city},${state}&radius=1&orderby=distance&page=1&pagesize=1`, requestOptions);
+          var property = await fetch(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detailmortgage?attomid=${attomId}`, requestOptions);
 
           var response = await property.json();
 
@@ -119,18 +168,43 @@
           <div>
             <div className="flex p-2">
               <label className=" ">Street:</label>
-              <input type="text" className="border-2 border-black p-1  m-2  rounded-lg" onChange={(event) => setAddress(event.target.value)} />
+              <input type="text" className="border-2 border-black p-1  m-2  rounded-lg" value={address} onChange={(event) => setAddress(event.target.value)} />
               <label className="">City:</label>
-              <input type="text" className="border-2 border-black p-1  m-2  rounded-lg" onChange={(event) => setCity(event.target.value)} />
+              <input type="text" className="border-2 border-black p-1  m-2  rounded-lg" value={city} onChange={(event) => setCity(event.target.value)} />
               <label className="">State:</label>
-              <input type="text" className="border-2 border-black p-1  m-2  rounded-lg" onChange={(event) => setState(event.target.value)} />
+              <input type="text" className="border-2 border-black p-1  m-2  rounded-lg" value={state} onChange={(event) => setState(event.target.value)} />
 
               <button onClick={() => getData()} className="bg-black text-white rounded-lg p-4 ">
                 Get Property
               </button>
             </div>
 
-           
+            <div class="flex flex-col ">
+              {property && property.address && <p>{property.address.oneLine}</p>}
+
+              {avm && (
+                <div class="p-2 m-2 border-2 border-solid border-black">
+                  <div>
+                    <p>Your Estimated home value: ${avm.amount.value}</p>
+                  </div>
+
+                  <div class="flex">
+                    <div>Low ${avm.amount.low}</div>
+                    <div>High ${avm.amount.high}</div>
+                  </div>
+                </div>
+              )}
+
+              {equity && (
+                <div class="p-2 m-2 border-2 border-solid border-black">
+                  <div>
+                    <p>Equity Estimate: ${equity.lendableEquity} -  ${equity.availableEquity}</p>
+                  </div>
+
+                   
+                </div>
+              )}
+            </div>
           </div>
         );
       };
