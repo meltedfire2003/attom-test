@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script crossorigin src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="container"></div>
+    <script type="text/babel">
+      const App = () => {
+
+        const { useState, useEffect } = React;
+       
+        const [address, setAddress] = useState("");
+        const [state, setState] = useState("");
+        const [city, setCity] = useState("");
+        const [attomID, setAttomID] = useState("");
+        const [property, setProperty] = useState("");
+        const [salesHistory, setSalesHistory] = useState("");
+        const [detailMortgage, setDetailMortgage] = useState("");
+        const [detailOwner, setDetailOwner] = useState("");
+        const [detailMortgageOwner, setDetailMortgageOwner] = useState("");
+       
+        const getSalesHistory = async () => {
+          var myHeaders = new Headers();
+          myHeaders.append("APIKey", "36b3a82c4a3ecfd1d73017a898864811");
+          myHeaders.append("accept", "application/json");
+          myHeaders.append("orderby", "distance");
+          myHeaders.append("pagesize", "1");
+
+          var requestOptions = {
+            method: "GET",
+            headers: myHeaders,
+            redirect: "follow",
+          };
+
+          var property = await fetch(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/saleshistory/expandedhistory?address1=${address}&address2=${city},${state}&radius=1&orderby=distance&page=1&pagesize=1`, requestOptions);
+
+          var response = await property.json();
+
+          setSalesHistory(response.salesHistory[0]);
+        };
+
+        const getDetailMortgage = async () => {
+          var myHeaders = new Headers();
+          myHeaders.append("APIKey", "36b3a82c4a3ecfd1d73017a898864811");
+          myHeaders.append("accept", "application/json");
+          myHeaders.append("orderby", "distance");
+          myHeaders.append("pagesize", "1");
+
+          var requestOptions = {
+            method: "GET",
+            headers: myHeaders,
+            redirect: "follow",
+          };
+
+          var property = await fetch(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/saleshistory/expandedhistory?address1=${address}&address2=${city},${state}&radius=1&orderby=distance&page=1&pagesize=1`, requestOptions);
+
+          var response = await property.json();
+
+          setDetailMortgage(response.mortgage);
+        };
+
+        const getDetailOwner = async () => {
+          var myHeaders = new Headers();
+          myHeaders.append("APIKey", "36b3a82c4a3ecfd1d73017a898864811");
+          myHeaders.append("accept", "application/json");
+          myHeaders.append("orderby", "distance");
+          myHeaders.append("pagesize", "1");
+
+          var requestOptions = {
+            method: "GET",
+            headers: myHeaders,
+            redirect: "follow",
+          };
+
+          var property = await fetch(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detailowner?address1=${address}&address2=${city},${state}&radius=1&orderby=distance&page=1&pagesize=1`, requestOptions);
+
+          var response = await property.json();
+
+          setDetailOwner(response.owner);
+        };
+
+        const getDetailMortgageOwner = async () => {
+          var myHeaders = new Headers();
+          myHeaders.append("APIKey", "36b3a82c4a3ecfd1d73017a898864811");
+          myHeaders.append("accept", "application/json");
+          myHeaders.append("orderby", "distance");
+          myHeaders.append("pagesize", "1");
+
+          var requestOptions = {
+            method: "GET",
+            headers: myHeaders,
+            redirect: "follow",
+          };
+
+          var property = await fetch(`https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detailmortgageowner?address1=${address}&address2=${city},${state}&radius=1&orderby=distance&page=1&pagesize=1`, requestOptions);
+
+          var response = await property.json();
+
+          setDetailMortgageOwner(response.owner);
+        };
+
+        return (
+          <div>
+            <div className="flex p-2">
+              <label className=" ">Street:</label>
+              <input type="text" className="border-2 border-black p-1  m-2  rounded-lg" onChange={(event) => setAddress(event.target.value)} />
+              <label className="">City:</label>
+              <input type="text" className="border-2 border-black p-1  m-2  rounded-lg" onChange={(event) => setCity(event.target.value)} />
+              <label className="">State:</label>
+              <input type="text" className="border-2 border-black p-1  m-2  rounded-lg" onChange={(event) => setState(event.target.value)} />
+
+              <button onClick={() => getProperty()} className="bg-black text-white rounded-lg p-4 ">
+                Get Property
+              </button>
+            </div>
+
+           
+          </div>
+        );
+      };
+
+      ReactDOM.render(<App />, document.getElementById("container"));
+    </script>
+  </body>
+</html>
